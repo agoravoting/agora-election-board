@@ -1,0 +1,12 @@
+# Routes
+# This file defines all application routes (Higher priority routes first)
+# ~~~~
+
+
+###
+# summary: swagger definition
+# description: for swagger UI to consume
+###
+GET   /docs/swagger.json         @controllers.swagger.ApiSpecs.specs
+### NoDocs ###
+GET   /docs/swagger-ui/*file        controllers.Assets.at(path:String="/public/lib/swagger-ui", file:String)

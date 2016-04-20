@@ -1,0 +1,15 @@
+---
+  swagger: "2.2"
+  info: 
+    title: "Agora-Election-Board"
+    description: "Public Bulletin Board with Fiware-Orion Backend"
+    version: "1.0.0"
+  host: localhost:9000
+  schemes:
+    - "http"
+  produces: 
+    - application/json
+  consumes: 
+    - application/json
+  definitions:
+    
