@@ -10,3 +10,5 @@
 GET   /docs/swagger.json         @controllers.swagger.ApiSpecs.specs
 ### NoDocs ###
 GET   /docs/swagger-ui/*file        controllers.Assets.at(path:String="/public/lib/swagger-ui", file:String)
+
+POST     /election/create                    controllers.ElectionController.create

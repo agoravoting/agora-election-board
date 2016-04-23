@@ -1,5 +1,6 @@
 import com.google.inject.AbstractModule
 import java.time.Clock
+import controllers._
 
 /**
  * This class is a Guice module that tells Guice how to bind several
@@ -14,6 +15,9 @@ import java.time.Clock
 class Module extends AbstractModule {
 
   override def configure() = {
+    // Ask Guice to create an instance of FiwareBackend when the
+    // application starts, reducing latency on the first Backend call
+    bind(classOf[ElectionController]).asEagerSingleton
   }
 
 }
