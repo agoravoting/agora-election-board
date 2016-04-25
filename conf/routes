@@ -3,7 +3,7 @@
 # ~~~~
 
 
-###
+### 
 # summary: swagger definition
 # description: for swagger UI to consume
 ###
@@ -12,3 +12,7 @@ GET   /docs/swagger.json         @controllers.swagger.ApiSpecs.specs
 GET   /docs/swagger-ui/*file        controllers.Assets.at(path:String="/public/lib/swagger-ui", file:String)
 
 POST     /election/create                    controllers.ElectionController.create
+
+POST     /accumulate                    controllers.Accumulator.accumulate
+
+POST     /subscribe                    controllers.Accumulator.subscribe
