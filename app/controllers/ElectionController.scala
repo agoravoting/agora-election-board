@@ -16,6 +16,7 @@ class ElectionController @Inject()
   (ws: WSClient)
   (cached: Cached) 
   (actorSystem: ActorSystem)
+  (configuration: services.Config) 
   (implicit exec: ExecutionContext) 
   extends Controller  
   with ElectionMachineJsonIo
@@ -25,7 +26,7 @@ class ElectionController @Inject()
   def create = Action.async { 
     request => { 
       val promise = Promise[Result]()
-      var message = "dd  \n "
+      var message = ""
       
       request.body.asJson flatMap {
         json => 
@@ -41,7 +42,7 @@ class ElectionController @Inject()
            Logger.info("Posting to agora-board !\n" + Json.toJson(post))
            
            val futureResponse: Future[WSResponse] = 
-           ws.url(s"http://localhost:9000/bulletin_post")
+           ws.url(s"${configuration.agoraboard.url}/bulletin_post")
            .withHeaders(
                "Content-Type" -> "application/json",
                "Accept" -> "application/json")

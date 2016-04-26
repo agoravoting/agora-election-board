@@ -11,40 +11,44 @@ import models._
 import scala.util.{Try, Success, Failure}
 import play.api.libs.json._
 import services.Subscription
+import java.util.Base64
+import java.nio.charset.StandardCharsets
 
 @Singleton
 class Accumulator @Inject
   (ws: WSClient)
   (cached: Cached) 
   (actorSystem: ActorSystem)
-  (implicit exec: ExecutionContext) 
+  (configuration: services.Config)
+  (implicit exec: ExecutionContext)
   extends Controller
   with BoardJSONFormatter
   with FiwareJSONFormatter
   with Subscription
   with ErrorProcessing
 {
-  
-  /*subscribeToEverything()
-  
-  def subscribeToEverything() = {
-    Logger.info(s"Subscribing to everything")
-    val acc = new SubscribeRequest("", "", "http://localhost:9500/accumulate")
-    val futureResponse: Future[WSResponse] = 
-    ws.url(s"http://localhost:9000/bulletin_subscribe")
-    .withHeaders(
-      "Content-Type" -> "application/json",
-      "Accept" -> "application/json")
-    .post(Json.toJson(acc))
-
-    futureResponse onComplete {
-      case Success(response) =>
-        Logger.info(s"Success: ${response.body}")
-      case Failure(e) =>
-        Logger.info(s"Failure: $e")
+  def processAccumulate(accReq: AccumulateRequest) : Seq[Post] = {
+    val postSeq = accReq.contextResponses flatMap {  x => 
+      x.contextElement.attributes flatMap { y =>
+        y.value.validate[Post] match {
+          case post: JsSuccess[Post] =>
+            /*val p: Post = post.get
+            // for some reason Fiware doesn't like the '=' character on a String (or \")
+            val messageB64 = p.message.replace('.', '=')
+            val message = new String(Base64.getDecoder.decode(messageB64), StandardCharsets.UTF_8)
+            Logger.info(s"processAccumulate valid Post: ${Json.stringify(y.value)}!")
+            Logger.info(s"B64 decoded: ${message}")
+            Some(Post(message, p.user_attributes, p.board_attributes))*/
+            Some(post.get)
+          case e: JsError =>
+            Logger.info("processAccumulate has a None: this is not a valid Post: ${y.value}! error: $e")
+            None
+        }
+      }
     }
-  }*/
-
+    postSeq
+  }
+  
   def accumulate = Action.async { request =>
     Logger.info("Accumulate")
     request.body.asJson match {
@@ -55,12 +59,14 @@ class Accumulator @Inject
             getSubscription(accReq.subscriptionId) match {
               case Some(reference) =>
                 val promise = Promise[Result]
+                val processed = Json.toJson(processAccumulate(accReq))
                 Logger.info("==============================================")
                 Logger.info(s"accumulate: subscriptionId: ${accReq.subscriptionId} reference: ${reference} text: ${json}")
+                println(s"processed: ${Json.stringify(processed)}")
                 val futureResponse: Future[WSResponse] = ws.url(reference)
                 .withHeaders("Content-Type" -> "application/json",
                              "Accept" -> "application/json")
-                .post(json)
+                .post(processed)
                 
                 futureResponse onComplete {
                   case Success(response) =>
@@ -97,9 +103,9 @@ class Accumulator @Inject
           case sr: JsSuccess[SubscribeRequest] =>
             val promise = Promise[Result]
             val subscriber = sr.get
-            val acc = new SubscribeRequest(subscriber.section, subscriber.group, "http://localhost:9500/accumulate")
+            val acc = new SubscribeRequest(subscriber.section, subscriber.group, s"${configuration.server.url}/accumulate")
             val futureResponse: Future[WSResponse] = 
-            ws.url(s"http://localhost:9000/bulletin_subscribe")
+            ws.url(s"${configuration.agoraboard.url}/bulletin_subscribe")
             .withHeaders(
               "Content-Type" -> "application/json",
               "Accept" -> "application/json")
