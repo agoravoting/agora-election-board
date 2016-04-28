@@ -19,7 +19,7 @@ class ElectionController @Inject()
   (configuration: services.Config) 
   (implicit exec: ExecutionContext) 
   extends Controller  
-  with ElectionMachineJsonIo
+  with ElectionJsonFormatter
   with BoardJSONFormatter
 {
   
@@ -30,11 +30,11 @@ class ElectionController @Inject()
       
       request.body.asJson flatMap {
         json => 
-          Try[JsElection[JsElectionState]] {
+          Try[JsElection] {
             val b64 = new Base64Message(json)
             // for some reason Fiware doesn't like the '=' character on a String (or \")
             message = b64.toString().replace('=', '.')
-            json.as[JsElection[JsElectionState]]
+            json.as[JsElection]
           } toOption
       } match {
         case Some(e) => 
